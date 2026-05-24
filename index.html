@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edible Freshness Checker</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+ 
+  body {
+    margin: 0;
+    padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: #ffffff;
+    color: #1B3A2F;
+  }
+ 
+  .widget {
+    background: #ffffff;
+    border: 1.5px solid rgba(27, 58, 47, 0.15);
+    border-radius: 16px;
+    padding: 28px 24px 24px;
+    max-width: 540px;
+    margin: 0 auto;
+  }
+ 
+  .widget-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #7A8B82;
+    margin-bottom: 6px;
+  }
+ 
+  .widget-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1B3A2F;
+    line-height: 1.25;
+    margin-bottom: 4px;
+  }
+ 
+  .widget-subtitle {
+    font-size: 13px;
+    color: #7A8B82;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+ 
+  /* Progress bar */
+  .progress-track {
+    height: 3px;
+    background: rgba(27, 58, 47, 0.1);
+    border-radius: 99px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+ 
+  .progress-fill {
+    height: 100%;
+    background: #1B3A2F;
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+ 
+  /* Question card */
+  .question-block {
+    display: none;
+    animation: fadeUp 0.3s ease forwards;
+  }
+ 
+  .question-block.active {
+    display: block;
+  }
+ 
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+ 
+  .question-number {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #7A8B82;
+    margin-bottom: 8px;
+  }
+ 
+  .question-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1B3A2F;
+    line-height: 1.4;
+    margin-bottom: 20px;
+  }
+ 
+  /* Answer buttons */
+  .answers {
+    display: flex;
+    gap: 10px;
+  }
+ 
+  .answer-btn {
+    flex: 1;
+    padding: 14px 12px;
+    border: 1.5px solid rgba(27, 58, 47, 0.2);
+    border-radius: 12px;
+    background: #ffffff;
+    color: #1B3A2F;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+  }
+ 
+  .answer-btn:hover {
+    border-color: #1B3A2F;
+    background: #f4f8f6;
+    transform: translateY(-1px);
+  }
+ 
+  .answer-btn:active {
+    transform: translateY(0px);
+  }
+ 
+  .answer-btn.selected {
+    border-color: #1B3A2F;
+    background: #1B3A2F;
+    color: #ffffff;
+  }
+ 
+  .answer-emoji {
+    font-size: 22px;
+    line-height: 1;
+  }
+ 
+  .answer-label {
+    font-size: 13px;
+  }
+ 
+  /* Result panel */
+  .result-block {
+    display: none;
+    animation: fadeUp 0.35s ease forwards;
+    text-align: center;
+  }
+ 
+  .result-block.active {
+    display: block;
+  }
+ 
+  .result-icon {
+    font-size: 48px;
+    line-height: 1;
+    margin-bottom: 14px;
+    display: block;
+  }
+ 
+  .result-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1B3A2F;
+    margin-bottom: 8px;
+  }
+ 
+  .result-body {
+    font-size: 14px;
+    color: #4A5D53;
+    line-height: 1.65;
+    margin-bottom: 22px;
+    max-width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+ 
+  .result-pill {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+ 
+  .pill-go {
+    background: #e6f0ec;
+    color: #1B3A2F;
+  }
+ 
+  .pill-caution {
+    background: #fef6e4;
+    color: #8a6a00;
+  }
+ 
+  .pill-stop {
+    background: #fdecea;
+    color: #9b2424;
+  }
+ 
+  .restart-btn {
+    display: inline-block;
+    padding: 12px 28px;
+    background: #1B3A2F;
+    color: #ffffff;
+    border: none;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    font-family: inherit;
+    letter-spacing: 0.02em;
+  }
+ 
+  .restart-btn:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+  }
+ 
+  .restart-btn:active {
+    transform: translateY(0px);
+  }
+ 
+  /* Disclaimer */
+  .disclaimer {
+    font-size: 10px;
+    color: #aab5af;
+    text-align: center;
+    margin-top: 18px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+ 
+<div class="widget" id="widget">
+ 
+  <div class="widget-label">Quick Check</div>
+  <div class="widget-title">Is This Edible Still Good?</div>
+  <div class="widget-subtitle">Answer 3 quick questions to find out.</div>
+ 
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+ 
+  <!-- Question 1 -->
+  <div class="question-block active" id="q1">
+    <div class="question-number">Question 1 of 3</div>
+    <div class="question-text">Can you see any mold, fuzz, or unusual discoloration on it?</div>
+    <div class="answers">
+      <button class="answer-btn" onclick="answer(1, 'yes')">
+        <span class="answer-emoji">👀</span>
+        <span class="answer-label">Yes, I can</span>
+      </button>
+      <button class="answer-btn" onclick="answer(1, 'no')">
+        <span class="answer-emoji">✅</span>
+        <span class="answer-label">Nope, looks fine</span>
+      </button>
+    </div>
+  </div>
+ 
+  <!-- Question 2 -->
+  <div class="question-block" id="q2">
+    <div class="question-number">Question 2 of 3</div>
+    <div class="question-text">Give it a sniff. Does it smell rancid, sour, or off in any way?</div>
+    <div class="answers">
+      <button class="answer-btn" onclick="answer(2, 'yes')">
+        <span class="answer-emoji">🤢</span>
+        <span class="answer-label">Yeah, it's funky</span>
+      </button>
+      <button class="answer-btn" onclick="answer(2, 'no')">
+        <span class="answer-emoji">😌</span>
+        <span class="answer-label">Smells normal</span>
+      </button>
+    </div>
+  </div>
+ 
+  <!-- Question 3 -->
+  <div class="question-block" id="q3">
+    <div class="question-number">Question 3 of 3</div>
+    <div class="question-text">How's the texture? Any unexpected sliminess, hardening, or stickiness?</div>
+    <div class="answers">
+      <button class="answer-btn" onclick="answer(3, 'yes')">
+        <span class="answer-emoji">😬</span>
+        <span class="answer-label">Feels weird</span>
+      </button>
+      <button class="answer-btn" onclick="answer(3, 'no')">
+        <span class="answer-emoji">👌</span>
+        <span class="answer-label">Feels normal</span>
+      </button>
+    </div>
+  </div>
+ 
+  <!-- Results -->
+  <div class="result-block" id="result-go">
+    <span class="result-icon">🟢</span>
+    <div class="result-pill pill-go">Likely Good to Go</div>
+    <div class="result-title">Looks Fine From Here</div>
+    <div class="result-body">No mold, no off smells, normal texture. That's a solid pass on all three checks. Potency may have mellowed over time, so starting with a smaller amount than usual is always a smart move.</div>
+    <button class="restart-btn" onclick="restart()">Check Another</button>
+  </div>
+ 
+  <div class="result-block" id="result-caution">
+    <span class="result-icon">🟡</span>
+    <div class="result-pill pill-caution">Proceed with Caution</div>
+    <div class="result-title">One Flag Raised</div>
+    <div class="result-body">Something was a little off. A single unusual sign — especially texture — isn't always a dealbreaker, but it's worth a closer look before you commit. When in doubt, trust your gut.</div>
+    <button class="restart-btn" onclick="restart()">Check Another</button>
+  </div>
+ 
+  <div class="result-block" id="result-stop">
+    <span class="result-icon">🔴</span>
+    <div class="result-pill pill-stop">Time to Toss It</div>
+    <div class="result-title">This One's Done</div>
+    <div class="result-body">Visible mold or a clearly off smell means this edible has crossed the line. Cannabinoids fade safely, but food spoilage is a different story. Toss it and grab something fresh.</div>
+    <button class="restart-btn" onclick="restart()">Check Another</button>
+  </div>
+ 
+  <div class="disclaimer">For general guidance only. Must be 21+ to purchase or consume. Use responsibly.</div>
+ 
+</div>
+ 
+<script>
+  var answers = {};
+ 
+  function answer(questionNum, value) {
+    answers[questionNum] = value;
+ 
+    var currentQ = document.getElementById('q' + questionNum);
+    var btns = currentQ.querySelectorAll('.answer-btn');
+    btns.forEach(function(btn) { btn.classList.remove('selected'); });
+    event.currentTarget.classList.add('selected');
+ 
+    setTimeout(function() {
+      currentQ.classList.remove('active');
+ 
+      var progress = (questionNum / 3) * 100;
+      document.getElementById('progressFill').style.width = progress + '%';
+ 
+      if (questionNum < 3) {
+        var nextQ = document.getElementById('q' + (questionNum + 1));
+        nextQ.classList.add('active');
+      } else {
+        document.getElementById('progressFill').style.width = '100%';
+        showResult();
+      }
+ 
+      sendHeight();
+    }, 220);
+  }
+ 
+  function showResult() {
+    var failCount = 0;
+    if (answers[1] === 'yes') failCount++;
+    if (answers[2] === 'yes') failCount++;
+    if (answers[3] === 'yes') failCount++;
+ 
+    var resultId;
+    if (failCount === 0) {
+      resultId = 'result-go';
+    } else if (answers[1] === 'yes' || answers[2] === 'yes') {
+      resultId = 'result-stop';
+    } else {
+      resultId = 'result-caution';
+    }
+ 
+    document.getElementById(resultId).classList.add('active');
+    sendHeight();
+  }
+ 
+  function restart() {
+    answers = {};
+ 
+    ['q1','q2','q3'].forEach(function(id) {
+      var el = document.getElementById(id);
+      el.classList.remove('active');
+      el.querySelectorAll('.answer-btn').forEach(function(btn) {
+        btn.classList.remove('selected');
+      });
+    });
+ 
+    ['result-go','result-caution','result-stop'].forEach(function(id) {
+      document.getElementById(id).classList.remove('active');
+    });
+ 
+    document.getElementById('progressFill').style.width = '0%';
+    document.getElementById('q1').classList.add('active');
+    sendHeight();
+  }
+ 
+  function sendHeight() {
+    setTimeout(function() {
+      var height = document.getElementById('widget').scrollHeight + 48;
+      window.parent.postMessage({ type: 'resize', height: height }, '*');
+    }, 50);
+  }
+ 
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+</script>
+ 
+</body>
+</html>
